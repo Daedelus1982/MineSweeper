@@ -14,16 +14,37 @@ class MineField(private val rows: Int, private val columns: Int, mines: Int) {
 
     init {
         repeat(mines) {
-            var randomRow = Random.nextInt(0, rows)
-            var randomColumn = Random.nextInt(0, columns)
-
-            while (mineField[randomRow][randomColumn] == 'X') {
+            var randomRow: Int
+            var randomColumn: Int
+            do {
                 randomRow = Random.nextInt(0, rows)
                 randomColumn = Random.nextInt(0, columns)
-            }
+            } while (mineField[randomRow][randomColumn] == 'X')
 
             mineField[randomRow][randomColumn] = 'X'
         }
+        mineField.indices
+            .forEach { r -> mineField[0].indices
+                .forEach { c -> if (!isMine(r, c)) applyMineCount(r, c)} }
+    }
+
+    private fun isMine(row: Int, column: Int) = mineField[row][column] == 'X'
+
+    private fun surroundingCells(row: Int, column: Int): List<Pair<Int, Int>> {
+        val rowRange = row - 1..row + 1
+        val columnRange = column - 1..column + 1
+        return rowRange.flatMap { r -> columnRange.map { c -> Pair(r, c) } }
+            .filter { it.first >= 0 && it.first <= rows - 1}
+            .filter { it.second >= 0 && it.second <= columns - 1 }
+            .filter { !(it.first == row && it.second == column) }
+    }
+
+    private fun countSurroundingMines(row: Int, column: Int) = surroundingCells(row, column)
+        .count { isMine(it.first, it.second) }
+
+    private fun applyMineCount(row: Int, column: Int) {
+        val surroundingMines = countSurroundingMines(row, column)
+        if (surroundingMines != 0) mineField[row][column] = surroundingMines.digitToChar()
     }
 
     override fun toString(): String {
